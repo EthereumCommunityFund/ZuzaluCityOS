@@ -1,0 +1,117 @@
+.fc {
+  height: 100% !important;
+}
+
+.fc-theme-standard td {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.fc-theme-standard td:hover {
+  /* background-color: rgba(255, 255, 255, 0.1) !important; */
+}
+
+.fc-theme-standard td:first-child {
+  border-left: none !important;
+}
+
+.fc-theme-standard td:last-child {
+  border-right: none !important;
+}
+
+.fc-theme-standard tbody tr:first-child td {
+  border-top: none !important;
+}
+
+.fc-theme-standard th {
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.fc .fc-scrollgrid-liquid {
+  border: none !important;
+}
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: transparent !important;
+}
+
+.fc .fc-cell-shaded,
+.fc .fc-day-disabled {
+  background-color: transparent !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day {
+  height: 120px !important;
+}
+.fc-daygrid-event-dot {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.fc-event {
+  cursor: pointer;
+  border-radius: 3px;
+}
+.fc-daygrid-event-harness-abs .fc-event {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border: none;
+}
+.fc-daygrid-event-harness-abs a {
+  line-height: 20px !important;
+  padding-left: 2px !important;
+}
+
+.fc-daygrid-day-bottom a {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+.fc-event:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.fc-event-time,
+.fc-event-title {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+.fc-popover {
+  background: rgba(44, 44, 44, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  top: 30% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 400px !important;
+  z-index: 1000 !important;
+  border-radius: 10px !important;
+}
+
+.fc-popover-header {
+  background: transparent !important;
+  padding: 20px !important;
+}
+
+.fc-popover-header span:first-child {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.fc-popover-body {
+  padding: 0 20px 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fc-popover-body .fc-daygrid-event-harness .fc-event-time,
+.fc-popover-body .fc-daygrid-event-harness .fc-event-title {
+  font-size: 13px !important;
+}
+
+.fc-popover-body .fc-daygrid-event-harness .fc-event {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.fc-popover-body .fc-daygrid-event-harness .fc-event:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}

@@ -1,0 +1,53 @@
+type ZucitySession
+  @createModel(
+    accountRelation: LIST
+    description: "Event Sessions for Zuzalu.city beta version"
+  )
+  @createIndex(fields: [{ path: "title" }])
+  @createIndex(fields: [{ path: "status" }])
+  @createIndex(fields: [{ path: "startTime" }])
+  @createIndex(fields: [{ path: "endTime" }])
+  @createIndex(fields: [{ path: "createdAt" }])
+  @createIndex(fields: [{ path: "gated" }])
+  @createIndex(fields: [{ path: "tags" }])
+  @createIndex(fields: [{ path: "format" }])
+  @createIndex(fields: [{ path: "track" }]) {
+  author: DID! @documentAccount
+  title: String! @string(minLength: 1, maxLength: 100000)
+  description: String! @string(minLength: 1, maxLength: 100000)
+  timezone: String @string(minLength: 1, maxLength: 100000)
+  meetingUrl: String @string(minLength: 1, maxLength: 100000)
+  status: String! @string(minLength: 1, maxLength: 100000)
+  videoUrl: String @string(minLength: 1, maxLength: 100000)
+  createdAt: DateTime!
+  startTime: DateTime!
+  endTime: DateTime!
+  eventId: StreamID! @documentReference(model: "ZucityEvent")
+  event: ZucityEvent! @relationDocument(property: "eventId")
+  profileId: StreamID! @documentReference(model: "ZucityProfile")
+  profile: ZucityProfile! @relationDocument(property: "profileId")
+  track: String! @string(minLength: 1, maxLength: 100000)
+  speakers: [DID!]! @list(maxLength: 10000)
+  organizers: [DID!] @list(maxLength: 10000)
+  format: String! @string(minLength: 1, maxLength: 100000)
+  type: String @string(minLength: 1, maxLength: 10000)
+  experienceLevel: String @string(minLength: 1, maxLength: 100000)
+  tags: String! @string(minLength: 1, maxLength: 100000)
+  gated: String @string(minLength: 1, maxLength: 100000)
+  liveStreamLink: String @string(minLength: 1, maxLength: 100000)
+  recordingLink: String @string(minLength: 1, maxLength: 100000)
+  location: String @string(minLength: 1, maxLength: 100000)
+  customAttributes: [TBD] @list(maxLength: 100000)
+}
+
+type ZucityEvent @loadModel(id: "$Event_ID") {
+  id: ID!
+}
+
+type ZucityProfile @loadModel(id: "$Profile_ID") {
+  id: ID!
+}
+
+type TBD {
+  tbd: String @string(minLength: 1, maxLength: 10000)
+}

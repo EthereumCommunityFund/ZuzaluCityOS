@@ -1,0 +1,35 @@
+type ZucityProfile
+  @createModel(
+    accountRelation: SINGLE
+    description: "User Profile for Zuzalu.city beta version"
+  )
+  @createIndex(fields: [{ path: "username" }])
+  @createIndex(fields: [{ path: "address" }])
+  @createIndex(fields: [{ path: "email" }]) {
+  author: DID! @documentAccount
+  username: String! @string(minLength: 1, maxLength: 10000)
+  avatar: String @string(minLength: 1, maxLength: 10000)
+  customAttributes: [TBD] @list(maxLength: 10000)
+  myScrollPassTickets: [ScrollTicket!] @list(maxLength: 10000)
+  address: String! @string(minLength: 1, maxLength: 10000)
+  email: String @string(minLength: 1, maxLength: 10000)
+}
+
+type TBD {
+  tbd: String @string(minLength: 1, maxLength: 10000)
+}
+
+
+type ScrollTicket {
+  eventId: String! @string(maxLength: 1000)
+  type: String! @string(minLength: 1, maxLength: 200)
+  contractAddress: String! @string(maxLength: 1000)
+  description: String! @string(maxLength: 1000)
+  image_url: String! @string(maxLength: 1000)
+  status: String! @string(maxLength: 1000)
+  checkin: String! @string(maxLength: 1000)
+  tbd: String @string(maxLength: 1000)
+  name: String! @string(maxLength: 1000)
+  price: Int
+  tokenType: String! @string(maxLength: 1000)
+}

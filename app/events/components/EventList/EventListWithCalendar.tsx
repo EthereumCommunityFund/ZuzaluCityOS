@@ -1,0 +1,238 @@
+import MobileNav from '@/app/events/components/EventList/MobileNav';
+import { MapIcon } from '@/components/icons';
+import {
+  addLocationsToEvents,
+  fetchOngoingEvents,
+  fetchPastEvents,
+  fetchUpcomingEvents,
+} from '@/services/event';
+import { Event } from '@/types';
+import { AdjustmentsHorizontalIcon } from '@heroicons/react/20/solid';
+import { DateValue } from '@heroui/react';
+import { Ticket } from '@phosphor-icons/react';
+import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import { FC, useMemo, useState } from 'react';
+import CalendarSelect from './CalendarSelect';
+import EventCalendar from './EventCalendar';
+import {
+  useCalendarConstraints,
+  useDateAvailability,
+  useEventsByTimeFilter,
+} from './EventCalendarHooks';
+import EventList from './EventList';
+
+export enum ITimeEnum {
+  UpComing = 'upcoming',
+  Past = 'past',
+  OnGoing = 'onGoing',
+}
+
+export const TimeFilterOptions = [
+  { key: ITimeEnum.UpComing, label: 'Upcoming' },
+  { key: ITimeEnum.Past, label: 'Past' },
+  { key: ITimeEnum.OnGoing, label: 'On Going' },
+];
+
+export interface IEventListWithCalendarProps {
+  searchVal?: string;
+}
+
+const EventListWithCalendar: FC<IEventListWithCalendarProps> = ({
+  searchVal,
+}) => {
+  const [selectedDate, setSelectedDate] = useState<DateValue | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string>('anywhere');
+  const [timeFilter, setTimeFilter] = useState<ITimeEnum>(ITimeEnum.UpComing);
+
+  const { data: upcomingEvents, isLoading: isUpcomingLoading } = useQuery({
+    queryKey: ['upcomingEvents'],
+    enabled: timeFilter === ITimeEnum.UpComing,
+    queryFn: async () => {
+      const result = await fetchUpcomingEvents();
+      if (result.error) {
+        console.error('Error fetching upcoming events:', result.error);
+        return [];
+      }
+      return await addLocationsToEvents(result.events);
+    },
+  });
+
+  const { data: pastEvents, isLoading: isPastLoading } = useQuery({
+    queryKey: ['pastEvents'],
+    enabled: timeFilter === ITimeEnum.Past,
+    queryFn: async () => {
+      const result = await fetchPastEvents();
+      if (result.error) {
+        console.error('Error fetching past events:', result.error);
+        return [];
+      }
+      return await addLocationsToEvents(result.events);
+    },
+  });
+
+  const { data: ongoingEvents, isLoading: isOngoingLoading } = useQuery({
+    queryKey: ['ongoingEvents'],
+    enabled: timeFilter === ITimeEnum.OnGoing,
+    queryFn: async () => {
+      const result = await fetchOngoingEvents();
+      if (result.error) {
+        console.error('Error fetching ongoing events:', result.error);
+        return [];
+      }
+      return await addLocationsToEvents(result.events);
+    },
+  });
+
+  const currentEvents = useEventsByTimeFilter(
+    timeFilter,
+    upcomingEvents || [],
+    pastEvents || [],
+    ongoingEvents || [],
+  );
+
+  const isLoading = useMemo(() => {
+    switch (timeFilter) {
+      case ITimeEnum.UpComing:
+        return isUpcomingLoading;
+      case ITimeEnum.Past:
+        return isPastLoading;
+      case ITimeEnum.OnGoing:
+        return isOngoingLoading;
+      default:
+        return isUpcomingLoading;
+    }
+  }, [timeFilter, isUpcomingLoading, isPastLoading, isOngoingLoading]);
+
+  const locations = useMemo(() => {
+    if (!currentEvents || currentEvents.length === 0)
+      return [{ key: 'anywhere', label: 'Anywhere' }];
+
+    const locationSet = new Set<string>();
+    currentEvents.forEach((event) => {
+      if (event.location) {
+        locationSet.add(event.location);
+      }
+    });
+
+    const locationOptions = Array.from(locationSet).map((location) => ({
+      key: location.toLowerCase().replace(/\s+/g, '-'),
+      label: location.toUpperCase(),
+    }));
+
+    return [{ key: 'anywhere', label: 'Anywhere' }, ...locationOptions];
+  }, [currentEvents]);
+
+  const filteredEvents = useMemo(() => {
+    if (!currentEvents) return [];
+
+    let events: Event[] = currentEvents;
+
+    if (searchVal) {
+      events = events.filter((event) =>
+        event.title.toLowerCase().includes(searchVal.toLowerCase()),
+      );
+    }
+
+    return events.filter((event: Event) => {
+      const dateMatches =
+        !selectedDate ||
+        (dayjs(event.startTime).date() === selectedDate.day &&
+          dayjs(event.startTime).month() + 1 === selectedDate.month &&
+          dayjs(event.startTime).year() === selectedDate.year);
+
+      const locationMatches =
+        selectedLocation === 'anywhere' ||
+        (event.location &&
+          event.location.toLowerCase().replace(/\s+/g, '-') ===
+            selectedLocation);
+
+      return dateMatches && locationMatches;
+    });
+  }, [currentEvents, searchVal, selectedDate, selectedLocation]);
+
+  const calendarDateConstraints = useCalendarConstraints(
+    timeFilter,
+    currentEvents,
+  );
+
+  const isDateUnavailable = useDateAvailability(
+    currentEvents,
+    calendarDateConstraints,
+  );
+
+  return (
+    <>
+      {/* pc/tablet navigation */}
+      <div className="flex items-center gap-[10px] bg-[rgba(34,34,34,0.90)] py-[10px] backdrop-blur-[10px] tablet:hidden mobile:hidden ">
+        <Ticket size={24} weight="fill" format="Stroke" />
+        <p className="text-[25px] font-bold leading-[1.2] text-white shadow-[0px_5px_10px_rgba(0,0,0,0.15)] tablet:text-[20px]">
+          Events
+        </p>
+      </div>
+
+      {/* mobile navigation */}
+      <MobileNav
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        selectedLocation={selectedLocation}
+        setSelectedLocation={setSelectedLocation}
+        locations={locations}
+        upcomingEvents={upcomingEvents || []}
+        pastEvents={pastEvents || []}
+        ongoingEvents={ongoingEvents || []}
+        timeFilter={timeFilter}
+        setTimeFilter={(key) => {
+          setTimeFilter(key as ITimeEnum);
+          setSelectedDate(null);
+        }}
+      />
+
+      <div className="mt-[10px] flex items-start justify-start gap-[20px]">
+        <EventList events={filteredEvents} isLoading={isLoading} />
+
+        <div className="flex w-[320px] flex-col gap-[20px] px-[20px] tablet:hidden mobile:hidden ">
+          <p className="border-b border-b-w-10 px-[10px] py-[20px] text-[18px] font-[700] leading-[1.2]">
+            Sort & Filter Events
+          </p>
+
+          <EventCalendar
+            value={selectedDate}
+            onChange={setSelectedDate}
+            onReset={() => setSelectedDate(null)}
+            minValue={calendarDateConstraints.minValue}
+            maxValue={calendarDateConstraints.maxValue}
+            isDateUnavailable={isDateUnavailable}
+          />
+
+          <div className="flex w-full flex-col gap-[10px]">
+            <CalendarSelect
+              options={TimeFilterOptions}
+              defaultSelectedKey={ITimeEnum.UpComing}
+              placeholder="Select time filter"
+              startContent={
+                <AdjustmentsHorizontalIcon className="size-[20px] text-white" />
+              }
+              onSelectionChange={(key) => {
+                setTimeFilter(key as ITimeEnum);
+                setSelectedDate(null);
+              }}
+            />
+
+            <CalendarSelect
+              options={locations}
+              defaultSelectedKey="anywhere"
+              placeholder="Select location"
+              startContent={<MapIcon size={5} />}
+              onSelectionChange={(key) => {
+                setSelectedLocation(key);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default EventListWithCalendar;
