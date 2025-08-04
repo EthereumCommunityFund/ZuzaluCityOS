@@ -1,0 +1,7 @@
+dist
+node_modules
+package.json
+composites
+.cursor
+graphql
+schema.graphql

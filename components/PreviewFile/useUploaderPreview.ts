@@ -1,0 +1,36 @@
+import {
+  CroppedFile,
+  SelectedFile,
+  Uploader3FileStatus,
+  UploadFile,
+  UploadResult,
+} from '@lxdao/uploader3';
+import { useState } from 'react';
+
+export const useUploaderPreview = (src?: string) => {
+  const [url, setUrl] = useState<string | undefined>(src);
+  const [file, setFile] = useState<
+    SelectedFile | UploadFile | UploadResult | CroppedFile
+  >();
+
+  const getUrl = (defaultUrl?: string) => {
+    if (!file) return url || defaultUrl;
+    switch (file.status) {
+      case Uploader3FileStatus.uploading:
+        return file.thumbData || file.imageData;
+      case Uploader3FileStatus.done:
+        return file.url;
+      case Uploader3FileStatus.cropped:
+      case Uploader3FileStatus.notCropped:
+        return file.thumbData || file.previewUrl;
+      default:
+        return file.previewUrl;
+    }
+  };
+
+  const errorMessage = () =>
+    file?.status === Uploader3FileStatus.error ? file.message : undefined;
+  const isLoading = () => file?.status === Uploader3FileStatus.uploading;
+
+  return { url, setUrl, file, setFile, getUrl, isLoading, errorMessage };
+};
