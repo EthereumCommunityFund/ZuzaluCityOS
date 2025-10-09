@@ -5,6 +5,77 @@ import {
   ProjectSnapRow,
 } from '@/types/external-database';
 
+type SmartContractEntry = {
+  address: string;
+  chain: string;
+};
+
+const normalizeSmartContracts = (
+  raw: any,
+): SmartContractEntry[] | undefined => {
+  if (!raw) {
+    return undefined;
+  }
+
+  const entries: SmartContractEntry[] = [];
+
+  const addEntry = (address: any, chain?: string) => {
+    if (typeof address !== 'string') {
+      return;
+    }
+
+    const trimmed = address.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    entries.push({ address: trimmed, chain: chain || 'ETH' });
+  };
+
+  if (typeof raw === 'string') {
+    raw.split(',').forEach((part) => addEntry(part));
+  } else if (Array.isArray(raw)) {
+    raw.forEach((item) => {
+      if (typeof item === 'string') {
+        addEntry(item);
+        return;
+      }
+
+      if (item && typeof item === 'object') {
+        if (Array.isArray(item.addresses)) {
+          item.addresses.forEach((addr: any) => addEntry(addr, item.chain));
+          return;
+        }
+
+        if ('address' in item) {
+          addEntry(item.address, item.chain);
+        }
+      }
+    });
+  } else if (typeof raw === 'object') {
+    if (Array.isArray(raw.contracts)) {
+      raw.contracts.forEach((contract: any) => {
+        if (Array.isArray(contract.addresses)) {
+          contract.addresses.forEach((addr: any) =>
+            addEntry(addr, contract.chain || raw.chain),
+          );
+          return;
+        }
+
+        if (contract && typeof contract === 'object' && contract.address) {
+          addEntry(contract.address, contract.chain);
+        }
+      });
+    } else if (Array.isArray(raw.addresses)) {
+      raw.addresses.forEach((addr: any) => addEntry(addr, raw.chain));
+    } else if (raw.address) {
+      addEntry(raw.address, raw.chain);
+    }
+  }
+
+  return entries.length ? entries : undefined;
+};
+
 export class ExternalDAppService {
   /**
    * Fetch all project snaps from external database
@@ -137,6 +208,7 @@ export class ExternalDAppService {
     parsedData: ParsedDAppData;
   }) {
     const parsedData = snap.parsedData;
+    const scAddresses = normalizeSmartContracts(parsedData.dappSmartContracts);
     return {
       id: `external_${snap.id}`,
       appName: parsedData.name || 'Unknown App',
@@ -161,12 +233,8 @@ export class ExternalDAppService {
       docsUrl: parsedData.whitePaper || undefined,
       tagline: parsedData.tagline || '',
       isInstallable: parsedData.appUrl ? true : false,
-      isSCApp: parsedData.dappSmartContracts ? true : false,
-      scAddresses: parsedData.dappSmartContracts
-        ? parsedData.dappSmartContracts
-            .split(',')
-            .map((address) => ({ address, chain: 'ETH' }))
-        : undefined,
+      isSCApp: scAddresses ? scAddresses.length > 0 : false,
+      scAddresses,
       auditLogUrl: '',
       profile: {
         id: 'external',
